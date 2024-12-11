@@ -136,6 +136,7 @@ static int av_noinline av_unused get_cabac_noinline(CABACContext *c, uint8_t * c
     return get_cabac_inline(c,state);
 }
 
+// get_cabac_inline()
 static int av_unused get_cabac(CABACContext *c, uint8_t * const state){
     return get_cabac_inline(c,state);
 }

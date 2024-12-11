@@ -59,7 +59,7 @@ RefPicList *ff_hevc_get_ref_list(HEVCContext *s, HEVCFrame *ref, int x0, int y0)
     int x_cb         = x0 >> s->ps.sps->CtbLog2SizeY;
     int y_cb         = y0 >> s->ps.sps->CtbLog2SizeY;
     int pic_width_cb = s->ps.sps->ctb_width;
-    int ctb_addr_ts  = s->ps.pps->ctb_addr_rs_to_ts[y_cb * pic_width_cb + x_cb];
+    int ctb_addr_ts  = s->ps.pps->CtbAddrRsToTs[y_cb * pic_width_cb + x_cb];
     return (RefPicList *)ref->rpl_tab[ctb_addr_ts];
 }
 
@@ -274,7 +274,7 @@ static int init_slice_rpl(HEVCContext *s)
 {
     HEVCFrame *frame = s->ref;
     int ctb_count    = frame->ctb_count;
-    int ctb_addr_ts  = s->ps.pps->ctb_addr_rs_to_ts[s->sh.slice_segment_addr];
+    int ctb_addr_ts  = s->ps.pps->CtbAddrRsToTs[s->sh.slice_segment_address];
     int i;
 
     if (s->slice_idx >= frame->rpl_buf->size / sizeof(RefPicListTab))

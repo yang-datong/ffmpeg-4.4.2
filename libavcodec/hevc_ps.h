@@ -307,15 +307,15 @@ typedef struct HEVCPPS {
     uint8_t log2_sao_offset_scale_chroma;
 
     // Inferred parameters
-    unsigned int *column_width;  ///< ColumnWidth
-    unsigned int *row_height;    ///< RowHeight
-    unsigned int *col_bd;        ///< ColBd
-    unsigned int *row_bd;        ///< RowBd
+    unsigned int *colWidth;  ///< ColumnWidth
+    unsigned int *rowHeight;    ///< RowHeight
+    unsigned int *colBd;        ///< ColBd
+    unsigned int *rowBd;        ///< RowBd
     int *col_idxX;
 
-    int *ctb_addr_rs_to_ts; ///< CtbAddrRSToTS
-    int *ctb_addr_ts_to_rs; ///< CtbAddrTSToRS
-    int *tile_id;           ///< TileId
+    int *CtbAddrRsToTs; ///< CtbAddrRSToTS
+    int *CtbAddrTsToRs; ///< CtbAddrTSToRS
+    int *TileId;           ///< TileId
     int *tile_pos_rs;       ///< TilePosRS
     int *min_tb_addr_zs;    ///< MinTbAddrZS
     int *min_tb_addr_zs_tab;///< MinTbAddrZS

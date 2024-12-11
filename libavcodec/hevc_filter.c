@@ -252,7 +252,7 @@ static void sao_filter_CTB(HEVCContext *s, int x, int y)
     int x_ctb                = x >> s->ps.sps->CtbLog2SizeY;
     int y_ctb                = y >> s->ps.sps->CtbLog2SizeY;
     int ctb_addr_rs          = y_ctb * s->ps.sps->ctb_width + x_ctb;
-    int ctb_addr_ts          = s->ps.pps->ctb_addr_rs_to_ts[ctb_addr_rs];
+    int ctb_addr_ts          = s->ps.pps->CtbAddrRsToTs[ctb_addr_rs];
     SAOParams *sao           = &CTB(s->sao, x_ctb, y_ctb);
     // flags indicating unfilterable edges
     uint8_t vert_edge[]      = { 0, 0 };
@@ -274,19 +274,19 @@ static void sao_filter_CTB(HEVCContext *s, int x, int y)
 
     if (restore) {
         if (!edges[0]) {
-            left_tile_edge  = no_tile_filter && s->ps.pps->tile_id[ctb_addr_ts] != s->ps.pps->tile_id[s->ps.pps->ctb_addr_rs_to_ts[ctb_addr_rs-1]];
+            left_tile_edge  = no_tile_filter && s->ps.pps->TileId[ctb_addr_ts] != s->ps.pps->TileId[s->ps.pps->CtbAddrRsToTs[ctb_addr_rs-1]];
             vert_edge[0]    = (!lfase && CTB(s->tab_slice_address, x_ctb, y_ctb) != CTB(s->tab_slice_address, x_ctb - 1, y_ctb)) || left_tile_edge;
         }
         if (!edges[2]) {
-            right_tile_edge = no_tile_filter && s->ps.pps->tile_id[ctb_addr_ts] != s->ps.pps->tile_id[s->ps.pps->ctb_addr_rs_to_ts[ctb_addr_rs+1]];
+            right_tile_edge = no_tile_filter && s->ps.pps->TileId[ctb_addr_ts] != s->ps.pps->TileId[s->ps.pps->CtbAddrRsToTs[ctb_addr_rs+1]];
             vert_edge[1]    = (!lfase && CTB(s->tab_slice_address, x_ctb, y_ctb) != CTB(s->tab_slice_address, x_ctb + 1, y_ctb)) || right_tile_edge;
         }
         if (!edges[1]) {
-            up_tile_edge     = no_tile_filter && s->ps.pps->tile_id[ctb_addr_ts] != s->ps.pps->tile_id[s->ps.pps->ctb_addr_rs_to_ts[ctb_addr_rs - s->ps.sps->ctb_width]];
+            up_tile_edge     = no_tile_filter && s->ps.pps->TileId[ctb_addr_ts] != s->ps.pps->TileId[s->ps.pps->CtbAddrRsToTs[ctb_addr_rs - s->ps.sps->ctb_width]];
             horiz_edge[0]    = (!lfase && CTB(s->tab_slice_address, x_ctb, y_ctb) != CTB(s->tab_slice_address, x_ctb, y_ctb - 1)) || up_tile_edge;
         }
         if (!edges[3]) {
-            bottom_tile_edge = no_tile_filter && s->ps.pps->tile_id[ctb_addr_ts] != s->ps.pps->tile_id[s->ps.pps->ctb_addr_rs_to_ts[ctb_addr_rs + s->ps.sps->ctb_width]];
+            bottom_tile_edge = no_tile_filter && s->ps.pps->TileId[ctb_addr_ts] != s->ps.pps->TileId[s->ps.pps->CtbAddrRsToTs[ctb_addr_rs + s->ps.sps->ctb_width]];
             horiz_edge[1]    = (!lfase && CTB(s->tab_slice_address, x_ctb, y_ctb) != CTB(s->tab_slice_address, x_ctb, y_ctb + 1)) || bottom_tile_edge;
         }
         if (!edges[0] && !edges[1]) {

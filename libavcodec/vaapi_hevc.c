@@ -205,10 +205,10 @@ static int vaapi_hevc_start_frame(AVCodecContext          *avctx,
         pic_param->num_tile_rows_minus1    = pps->num_tile_rows - 1;
 
         for (i = 0; i < pps->num_tile_columns; i++)
-            pic_param->column_width_minus1[i] = pps->column_width[i] - 1;
+            pic_param->column_width_minus1[i] = pps->colWidth[i] - 1;
 
         for (i = 0; i < pps->num_tile_rows; i++)
-            pic_param->row_height_minus1[i] = pps->row_height[i] - 1;
+            pic_param->row_height_minus1[i] = pps->rowHeight[i] - 1;
     }
 
     if (h->sh.short_term_ref_pic_set_sps_flag == 0 && h->sh.short_term_rps) {
@@ -408,7 +408,7 @@ static int vaapi_hevc_decode_slice(AVCodecContext *avctx,
 
     int err, i, list_idx;
 
-    if (!sh->first_slice_in_pic_flag) {
+    if (!sh->first_mb_in_slice ) {
         err = ff_vaapi_decode_make_slice_buffer(avctx, &pic->pic,
                                                 &pic->last_slice_param, slice_param_size,
                                                 pic->last_buffer, pic->last_size);
@@ -427,7 +427,7 @@ static int vaapi_hevc_decode_slice(AVCodecContext *avctx,
         /* Add 1 to the bits count here to account for the byte_alignment bit, which
          * always is at least one bit and not accounted for otherwise. */
         .slice_data_byte_offset        = (get_bits_count(&h->HEVClc->gb) + 1 + 7) / 8,
-        .slice_segment_address         = sh->slice_segment_addr,
+        .slice_segment_address         = sh->slice_segment_address,
         .slice_qp_delta                = sh->slice_qp_delta,
         .slice_cb_qp_offset            = sh->slice_cb_qp_offset,
         .slice_cr_qp_offset            = sh->slice_cr_qp_offset,

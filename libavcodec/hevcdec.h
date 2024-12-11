@@ -251,15 +251,15 @@ typedef struct SliceHeader {
     unsigned int pps_id;
 
     ///< address (in raster order) of the first block in the current slice segment
-    unsigned int   slice_segment_addr;
+    unsigned int   slice_segment_address;
     ///< address (in raster order) of the first block in the current slice
-    unsigned int   slice_addr;
+    unsigned int   SliceAddrRs;
 
     enum HEVCSliceType slice_type;
 
     int pic_order_cnt_lsb;
 
-    uint8_t first_slice_in_pic_flag;
+    uint8_t first_mb_in_slice;
     uint8_t dependent_slice_segment_flag;
     uint8_t pic_output_flag;
     uint8_t colour_plane_id;
@@ -423,7 +423,7 @@ typedef struct HEVCFrame {
 } HEVCFrame;
 
 typedef struct HEVCLocalContext {
-    uint8_t cabac_state[HEVC_CONTEXTS];
+    uint8_t preCtxState[HEVC_CONTEXTS];
 
     uint8_t stat_coeff[HEVC_STAT_COEFFS];
 

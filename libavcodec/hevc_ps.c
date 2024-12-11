@@ -1264,15 +1264,15 @@ int ff_hevc_decode_nal_sps(GetBitContext *gb, AVCodecContext *avctx,
 static void hevc_pps_free(void *opaque, uint8_t *data) {
   HEVCPPS *pps = (HEVCPPS *)data;
 
-  av_freep(&pps->column_width);
-  av_freep(&pps->row_height);
-  av_freep(&pps->col_bd);
-  av_freep(&pps->row_bd);
+  av_freep(&pps->colWidth);
+  av_freep(&pps->rowHeight);
+  av_freep(&pps->colBd);
+  av_freep(&pps->rowBd);
   av_freep(&pps->col_idxX);
-  av_freep(&pps->ctb_addr_rs_to_ts);
-  av_freep(&pps->ctb_addr_ts_to_rs);
+  av_freep(&pps->CtbAddrRsToTs);
+  av_freep(&pps->CtbAddrTsToRs);
   av_freep(&pps->tile_pos_rs);
-  av_freep(&pps->tile_id);
+  av_freep(&pps->TileId);
   av_freep(&pps->min_tb_addr_zs_tab);
 
   av_freep(&pps);
@@ -1324,43 +1324,43 @@ static inline int setup_pps(AVCodecContext *avctx, GetBitContext *gb,
   int i, j, x, y, ctb_addr_rs, tile_id;
 
   // Inferred parameters
-  pps->col_bd =
-      av_malloc_array(pps->num_tile_columns + 1, sizeof(*pps->col_bd));
-  pps->row_bd = av_malloc_array(pps->num_tile_rows + 1, sizeof(*pps->row_bd));
+  pps->colBd =
+      av_malloc_array(pps->num_tile_columns + 1, sizeof(*pps->colBd));
+  pps->rowBd = av_malloc_array(pps->num_tile_rows + 1, sizeof(*pps->rowBd));
   pps->col_idxX = av_malloc_array(sps->ctb_width, sizeof(*pps->col_idxX));
-  if (!pps->col_bd || !pps->row_bd || !pps->col_idxX) return AVERROR(ENOMEM);
+  if (!pps->colBd || !pps->rowBd || !pps->col_idxX) return AVERROR(ENOMEM);
 
   if (pps->uniform_spacing_flag) {
-    if (!pps->column_width) {
-      pps->column_width =
-          av_malloc_array(pps->num_tile_columns, sizeof(*pps->column_width));
-      pps->row_height =
-          av_malloc_array(pps->num_tile_rows, sizeof(*pps->row_height));
+    if (!pps->colWidth) {
+      pps->colWidth =
+          av_malloc_array(pps->num_tile_columns, sizeof(*pps->colWidth));
+      pps->rowHeight =
+          av_malloc_array(pps->num_tile_rows, sizeof(*pps->rowHeight));
     }
-    if (!pps->column_width || !pps->row_height) return AVERROR(ENOMEM);
+    if (!pps->colWidth || !pps->rowHeight) return AVERROR(ENOMEM);
 
     for (i = 0; i < pps->num_tile_columns; i++) {
-      pps->column_width[i] =
+      pps->colWidth[i] =
           ((i + 1) * sps->ctb_width) / pps->num_tile_columns -
           (i * sps->ctb_width) / pps->num_tile_columns;
     }
 
     for (i = 0; i < pps->num_tile_rows; i++) {
-      pps->row_height[i] = ((i + 1) * sps->ctb_height) / pps->num_tile_rows -
+      pps->rowHeight[i] = ((i + 1) * sps->ctb_height) / pps->num_tile_rows -
                            (i * sps->ctb_height) / pps->num_tile_rows;
     }
   }
 
-  pps->col_bd[0] = 0;
+  pps->colBd[0] = 0;
   for (i = 0; i < pps->num_tile_columns; i++)
-    pps->col_bd[i + 1] = pps->col_bd[i] + pps->column_width[i];
+    pps->colBd[i + 1] = pps->colBd[i] + pps->colWidth[i];
 
-  pps->row_bd[0] = 0;
+  pps->rowBd[0] = 0;
   for (i = 0; i < pps->num_tile_rows; i++)
-    pps->row_bd[i + 1] = pps->row_bd[i] + pps->row_height[i];
+    pps->rowBd[i + 1] = pps->rowBd[i] + pps->rowHeight[i];
 
   for (i = 0, j = 0; i < sps->ctb_width; i++) {
-    if (i > pps->col_bd[j]) j++;
+    if (i > pps->colBd[j]) j++;
     pps->col_idxX[i] = j;
   }
 
@@ -1369,15 +1369,15 @@ static inline int setup_pps(AVCodecContext *avctx, GetBitContext *gb,
      */
   pic_area_in_ctbs = sps->ctb_width * sps->ctb_height;
 
-  pps->ctb_addr_rs_to_ts =
-      av_malloc_array(pic_area_in_ctbs, sizeof(*pps->ctb_addr_rs_to_ts));
-  pps->ctb_addr_ts_to_rs =
-      av_malloc_array(pic_area_in_ctbs, sizeof(*pps->ctb_addr_ts_to_rs));
-  pps->tile_id = av_malloc_array(pic_area_in_ctbs, sizeof(*pps->tile_id));
+  pps->CtbAddrRsToTs =
+      av_malloc_array(pic_area_in_ctbs, sizeof(*pps->CtbAddrRsToTs));
+  pps->CtbAddrTsToRs =
+      av_malloc_array(pic_area_in_ctbs, sizeof(*pps->CtbAddrTsToRs));
+  pps->TileId = av_malloc_array(pic_area_in_ctbs, sizeof(*pps->TileId));
   pps->min_tb_addr_zs_tab =
       av_malloc_array((sps->tb_mask + 2) * (sps->tb_mask + 2),
                       sizeof(*pps->min_tb_addr_zs_tab));
-  if (!pps->ctb_addr_rs_to_ts || !pps->ctb_addr_ts_to_rs || !pps->tile_id ||
+  if (!pps->CtbAddrRsToTs || !pps->CtbAddrTsToRs || !pps->TileId ||
       !pps->min_tb_addr_zs_tab) {
     return AVERROR(ENOMEM);
   }
@@ -1390,36 +1390,36 @@ static inline int setup_pps(AVCodecContext *avctx, GetBitContext *gb,
     int val = 0;
 
     for (i = 0; i < pps->num_tile_columns; i++) {
-      if (tb_x < pps->col_bd[i + 1]) {
+      if (tb_x < pps->colBd[i + 1]) {
         tile_x = i;
         break;
       }
     }
 
     for (i = 0; i < pps->num_tile_rows; i++) {
-      if (tb_y < pps->row_bd[i + 1]) {
+      if (tb_y < pps->rowBd[i + 1]) {
         tile_y = i;
         break;
       }
     }
 
     for (i = 0; i < tile_x; i++)
-      val += pps->row_height[tile_y] * pps->column_width[i];
+      val += pps->rowHeight[tile_y] * pps->colWidth[i];
     for (i = 0; i < tile_y; i++)
-      val += sps->ctb_width * pps->row_height[i];
+      val += sps->ctb_width * pps->rowHeight[i];
 
-    val += (tb_y - pps->row_bd[tile_y]) * pps->column_width[tile_x] + tb_x -
-           pps->col_bd[tile_x];
+    val += (tb_y - pps->rowBd[tile_y]) * pps->colWidth[tile_x] + tb_x -
+           pps->colBd[tile_x];
 
-    pps->ctb_addr_rs_to_ts[ctb_addr_rs] = val;
-    pps->ctb_addr_ts_to_rs[val] = ctb_addr_rs;
+    pps->CtbAddrRsToTs[ctb_addr_rs] = val;
+    pps->CtbAddrTsToRs[val] = ctb_addr_rs;
   }
 
   for (j = 0, tile_id = 0; j < pps->num_tile_rows; j++)
     for (i = 0; i < pps->num_tile_columns; i++, tile_id++)
-      for (y = pps->row_bd[j]; y < pps->row_bd[j + 1]; y++)
-        for (x = pps->col_bd[i]; x < pps->col_bd[i + 1]; x++)
-          pps->tile_id[pps->ctb_addr_rs_to_ts[y * sps->ctb_width + x]] =
+      for (y = pps->rowBd[j]; y < pps->rowBd[j + 1]; y++)
+        for (x = pps->colBd[i]; x < pps->colBd[i + 1]; x++)
+          pps->TileId[pps->CtbAddrRsToTs[y * sps->ctb_width + x]] =
               tile_id;
 
   pps->tile_pos_rs = av_malloc_array(tile_id, sizeof(*pps->tile_pos_rs));
@@ -1428,7 +1428,7 @@ static inline int setup_pps(AVCodecContext *avctx, GetBitContext *gb,
   for (j = 0; j < pps->num_tile_rows; j++)
     for (i = 0; i < pps->num_tile_columns; i++)
       pps->tile_pos_rs[j * pps->num_tile_columns + i] =
-          pps->row_bd[j] * sps->ctb_width + pps->col_bd[i];
+          pps->rowBd[j] * sps->ctb_width + pps->colBd[i];
 
   log2_diff = sps->CtbLog2SizeY - sps->log2_min_tb_size;
   pps->min_tb_addr_zs = &pps->min_tb_addr_zs_tab[1 * (sps->tb_mask + 2) + 1];
@@ -1441,7 +1441,7 @@ static inline int setup_pps(AVCodecContext *avctx, GetBitContext *gb,
       int tb_x = x >> log2_diff;
       int tb_y = y >> log2_diff;
       int rs = sps->ctb_width * tb_y + tb_x;
-      int val = pps->ctb_addr_rs_to_ts[rs] << (log2_diff * 2);
+      int val = pps->CtbAddrRsToTs[rs] << (log2_diff * 2);
       for (i = 0; i < log2_diff; i++) {
         int m = 1 << i;
         val += (m & x ? m * m : 0) + (m & y ? 2 * m * m : 0);
@@ -1591,11 +1591,11 @@ int ff_hevc_decode_nal_pps(GetBitContext *gb, AVCodecContext *avctx,
     pps->num_tile_columns = num_tile_columns_minus1 + 1;
     pps->num_tile_rows = num_tile_rows_minus1 + 1;
 
-    pps->column_width =
-        av_malloc_array(pps->num_tile_columns, sizeof(*pps->column_width));
-    pps->row_height =
-        av_malloc_array(pps->num_tile_rows, sizeof(*pps->row_height));
-    if (!pps->column_width || !pps->row_height) {
+    pps->colWidth =
+        av_malloc_array(pps->num_tile_columns, sizeof(*pps->colWidth));
+    pps->rowHeight =
+        av_malloc_array(pps->num_tile_rows, sizeof(*pps->rowHeight));
+    if (!pps->colWidth || !pps->rowHeight) {
       ret = AVERROR(ENOMEM);
       goto err;
     }
@@ -1604,27 +1604,27 @@ int ff_hevc_decode_nal_pps(GetBitContext *gb, AVCodecContext *avctx,
     if (!pps->uniform_spacing_flag) {
       uint64_t sum = 0;
       for (i = 0; i < pps->num_tile_columns - 1; i++) {
-        pps->column_width[i] = get_ue_golomb_long(gb) + 1;
-        sum += pps->column_width[i];
+        pps->colWidth[i] = get_ue_golomb_long(gb) + 1;
+        sum += pps->colWidth[i];
       }
       if (sum >= sps->ctb_width) {
         av_log(avctx, AV_LOG_ERROR, "Invalid tile widths.\n");
         ret = AVERROR_INVALIDDATA;
         goto err;
       }
-      pps->column_width[pps->num_tile_columns - 1] = sps->ctb_width - sum;
+      pps->colWidth[pps->num_tile_columns - 1] = sps->ctb_width - sum;
 
       sum = 0;
       for (i = 0; i < pps->num_tile_rows - 1; i++) {
-        pps->row_height[i] = get_ue_golomb_long(gb) + 1;
-        sum += pps->row_height[i];
+        pps->rowHeight[i] = get_ue_golomb_long(gb) + 1;
+        sum += pps->rowHeight[i];
       }
       if (sum >= sps->ctb_height) {
         av_log(avctx, AV_LOG_ERROR, "Invalid tile heights.\n");
         ret = AVERROR_INVALIDDATA;
         goto err;
       }
-      pps->row_height[pps->num_tile_rows - 1] = sps->ctb_height - sum;
+      pps->rowHeight[pps->num_tile_rows - 1] = sps->ctb_height - sum;
     }
     pps->loop_filter_across_tiles_enabled_flag = get_bits1(gb);
   }

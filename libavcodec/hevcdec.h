@@ -259,7 +259,7 @@ typedef struct SliceHeader {
 
     int pic_order_cnt_lsb;
 
-    uint8_t first_mb_in_slice;
+    uint8_t first_slice_segment_in_pic_flag;
     uint8_t dependent_slice_segment_flag;
     uint8_t pic_output_flag;
     uint8_t colour_plane_id;

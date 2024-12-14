@@ -1060,16 +1060,16 @@ static int cabac_reinit(HEVCLocalContext *lc) {
   return skip_bytes(&lc->cc, 0) == NULL ? AVERROR_INVALIDDATA : 0;
 }
 
-static int cabac_init_decoder(HEVCContext *s) {
+static int _initialization_decoding_engine(HEVCContext *s) {
   GetBitContext *gb = &s->HEVClc->gb;
   skip_bits(gb, 1);
   align_get_bits(gb);
-  return ff_init_cabac_decoder(&s->HEVClc->cc,
-                               gb->buffer + get_bits_count(gb) / 8,
-                               (get_bits_left(gb) + 7) / 8);
+  return initialization_decoding_engine(&s->HEVClc->cc,
+                                        gb->buffer + get_bits_count(gb) / 8,
+                                        (get_bits_left(gb) + 7) / 8);
 }
 
-static void cabac_init_state(HEVCContext *s) {
+static void initialization_context_variables(HEVCContext *s) {
   int init_type = 2 - s->sh.slice_type;
   int i;
 
@@ -1089,53 +1089,52 @@ static void cabac_init_state(HEVCContext *s) {
     s->HEVClc->stat_coeff[i] = 0;
 }
 
-int ff_hevc_cabac_init(HEVCContext *s, int ctb_addr_ts, int thread) {
+int ff_hevc_cabac_init(HEVCContext *s, int CtbAddrInTs, int thread) {
   /*av_log(NULL, AV_LOG_INFO, "ctb_addr_ts:%d\n", ctb_addr_ts);*/
   /*av_log(NULL, AV_LOG_INFO, "s->ps.pps->CtbAddrRsToTs[s->sh.slice_ctb_addr_rs]:%d\n", s->ps.pps->CtbAddrRsToTs[s->sh.slice_ctb_addr_rs]);*/
-  if (ctb_addr_ts == s->ps.pps->CtbAddrRsToTs[s->sh.slice_ctb_addr_rs]) {
-    int ret = cabac_init_decoder(s);
+  if (CtbAddrInTs == s->ps.pps->CtbAddrRsToTs[s->sh.slice_ctb_addr_rs]) {
+    int ret = _initialization_decoding_engine(s);
     if (ret < 0) return ret;
     if (s->sh.dependent_slice_segment_flag == 0 ||
         (s->ps.pps->tiles_enabled_flag &&
-         s->ps.pps->TileId[ctb_addr_ts] != s->ps.pps->TileId[ctb_addr_ts - 1]))
-      cabac_init_state(s);
+         s->ps.pps->TileId[CtbAddrInTs] != s->ps.pps->TileId[CtbAddrInTs - 1]))
+      initialization_context_variables(s);
 
-    if (!s->sh.first_mb_in_slice &&
+    if (!s->sh.first_slice_segment_in_pic_flag &&
         s->ps.pps->entropy_coding_sync_enabled_flag) {
       /* TODO YangJing 没进 <24-12-12 05:40:03> */
-      if (ctb_addr_ts % s->ps.sps->ctb_width == 0) {
+      if (CtbAddrInTs % s->ps.sps->ctb_width == 0) {
         if (s->ps.sps->ctb_width == 1)
-          cabac_init_state(s);
+          initialization_context_variables(s);
         else if (s->sh.dependent_slice_segment_flag == 1)
           load_states(s, thread);
       }
     }
   } else {
-      /* TODO YangJing 没进 <24-12-12 05:40:03> */
     if (s->ps.pps->tiles_enabled_flag &&
-        s->ps.pps->TileId[ctb_addr_ts] != s->ps.pps->TileId[ctb_addr_ts - 1]) {
+        s->ps.pps->TileId[CtbAddrInTs] != s->ps.pps->TileId[CtbAddrInTs - 1]) {
       int ret;
       if (s->threads_number == 1)
         ret = cabac_reinit(s->HEVClc);
       else {
-        ret = cabac_init_decoder(s);
+        ret = _initialization_decoding_engine(s);
       }
       if (ret < 0) return ret;
-      cabac_init_state(s);
+      initialization_context_variables(s);
     }
     if (s->ps.pps->entropy_coding_sync_enabled_flag) {
-      if (ctb_addr_ts % s->ps.sps->ctb_width == 0) {
+      if (CtbAddrInTs % s->ps.sps->ctb_width == 0) {
         int ret;
         get_cabac_terminate(&s->HEVClc->cc);
         if (s->threads_number == 1)
           ret = cabac_reinit(s->HEVClc);
         else {
-          ret = cabac_init_decoder(s);
+          ret = _initialization_decoding_engine(s);
         }
         if (ret < 0) return ret;
 
         if (s->ps.sps->ctb_width == 1)
-          cabac_init_state(s);
+          initialization_context_variables(s);
         else
           load_states(s, thread);
       }
@@ -1168,10 +1167,12 @@ int ff_hevc_sao_band_position_decode(HEVCContext *s) {
 
 int ff_hevc_sao_offset_abs_decode(HEVCContext *s) {
   int i = 0;
-  int length = (1 << (FFMIN(s->ps.sps->bit_depth, 10) - 5)) - 1;
+  int length = (1 << (FFMIN(s->ps.sps->bit_depth_luma, 10) - 5)) - 1;
 
   while (i < length && get_cabac_bypass(&s->HEVClc->cc))
     i++;
+
+  av_log(NULL, AV_LOG_INFO, "ff_hevc_sao_offset_abs_decode:%d\n", i);
   return i;
 }
 
@@ -1261,8 +1262,8 @@ int ff_hevc_split_coding_unit_flag_decode(HEVCContext *s, int ct_depth, int x0,
   int inc = 0, depth_left = 0, depth_top = 0;
   int x0b = av_mod_uintp2(x0, s->ps.sps->CtbLog2SizeY);
   int y0b = av_mod_uintp2(y0, s->ps.sps->CtbLog2SizeY);
-  int x_cb = x0 >> s->ps.sps->log2_min_cb_size;
-  int y_cb = y0 >> s->ps.sps->log2_min_cb_size;
+  int x_cb = x0 >> s->ps.sps->log2_min_luma_coding_block_size;
+  int y_cb = y0 >> s->ps.sps->log2_min_luma_coding_block_size;
 
   if (s->HEVClc->ctb_left_flag || x0b)
     depth_left = s->tab_ct_depth[(y_cb)*s->ps.sps->min_cb_width + x_cb - 1];
@@ -1272,13 +1273,13 @@ int ff_hevc_split_coding_unit_flag_decode(HEVCContext *s, int ct_depth, int x0,
   inc += (depth_left > ct_depth);
   inc += (depth_top > ct_depth);
 
-  return GET_CABAC(elem_offset[SPLIT_CODING_UNIT_FLAG] + inc);
+  return GET_CABAC(elem_offset[SPLIT_CODING_UNIT_FLAG] + inc); //0x2
 }
 
 int ff_hevc_part_mode_decode(HEVCContext *s, int log2_cb_size) {
   if (GET_CABAC(elem_offset[PART_MODE])) // 1
     return PART_2Nx2N;
-  if (log2_cb_size == s->ps.sps->log2_min_cb_size) {
+  if (log2_cb_size == s->ps.sps->log2_min_luma_coding_block_size) {
     if (s->HEVClc->cu.pred_mode == MODE_INTRA) // 0
       return PART_NxN;
     if (GET_CABAC(elem_offset[PART_MODE] + 1)) // 01
@@ -1665,7 +1666,7 @@ void ff_hevc_hls_residual_coding(HEVCContext *s, int x0, int y0,
       qp += s->ps.sps->qp_bd_offset;
     }
 
-    shift = s->ps.sps->bit_depth + log2_trafo_size - 5;
+    shift = s->ps.sps->bit_depth_luma + log2_trafo_size - 5;
     add = 1 << (shift - 1);
     scale = level_scale[rem6[qp]] << (div6[qp]);
     scale_m = 16; // default when no custom scaling lists.

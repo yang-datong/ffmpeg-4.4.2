@@ -76,14 +76,14 @@ do {                                  \
     int vshift = s->ps.sps->vshift[c_idx];
     int size = (1 << log2_size);
     int size_in_luma_h = size << hshift;
-    int size_in_tbs_h  = size_in_luma_h >> s->ps.sps->log2_min_tb_size;
+    int size_in_tbs_h  = size_in_luma_h >> s->ps.sps->log2_min_luma_transform_block_size;
     int size_in_luma_v = size << vshift;
-    int size_in_tbs_v  = size_in_luma_v >> s->ps.sps->log2_min_tb_size;
+    int size_in_tbs_v  = size_in_luma_v >> s->ps.sps->log2_min_luma_transform_block_size;
     int x = x0 >> hshift;
     int y = y0 >> vshift;
-    int x_tb = (x0 >> s->ps.sps->log2_min_tb_size) & s->ps.sps->tb_mask;
-    int y_tb = (y0 >> s->ps.sps->log2_min_tb_size) & s->ps.sps->tb_mask;
-    int spin = c_idx && !size_in_tbs_v && ((2 * y0) & (1 << s->ps.sps->log2_min_tb_size));
+    int x_tb = (x0 >> s->ps.sps->log2_min_luma_transform_block_size) & s->ps.sps->tb_mask;
+    int y_tb = (y0 >> s->ps.sps->log2_min_luma_transform_block_size) & s->ps.sps->tb_mask;
+    int spin = c_idx && !size_in_tbs_v && ((2 * y0) & (1 << s->ps.sps->log2_min_luma_transform_block_size));
 
     int cur_tb_addr = MIN_TB_ADDR_ZS(x_tb, y_tb);
 

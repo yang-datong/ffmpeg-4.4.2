@@ -133,11 +133,11 @@ static int vaapi_hevc_start_frame(AVCodecContext          *avctx,
     *pic_param = (VAPictureParameterBufferHEVC) {
         .pic_width_in_luma_samples                    = sps->width,
         .pic_height_in_luma_samples                   = sps->height,
-        .log2_min_luma_coding_block_size_minus3       = sps->log2_min_cb_size - 3,
+        .log2_min_luma_coding_block_size_minus3       = sps->log2_min_luma_coding_block_size - 3,
         .sps_max_dec_pic_buffering_minus1             = sps->temporal_layer[sps->max_sub_layers - 1].max_dec_pic_buffering - 1,
-        .log2_diff_max_min_luma_coding_block_size     = sps->log2_diff_max_min_coding_block_size,
-        .log2_min_transform_block_size_minus2         = sps->log2_min_tb_size - 2,
-        .log2_diff_max_min_transform_block_size       = sps->log2_max_trafo_size  - sps->log2_min_tb_size,
+        .log2_diff_max_min_luma_coding_block_size     = sps->log2_diff_max_min_luma_coding_block_size,
+        .log2_min_transform_block_size_minus2         = sps->log2_min_luma_transform_block_size - 2,
+        .log2_diff_max_min_transform_block_size       = sps->log2_max_trafo_size  - sps->log2_min_luma_transform_block_size,
         .max_transform_hierarchy_depth_inter          = sps->max_transform_hierarchy_depth_inter,
         .max_transform_hierarchy_depth_intra          = sps->max_transform_hierarchy_depth_intra,
         .num_short_term_ref_pic_sets                  = sps->nb_st_rps,
@@ -155,8 +155,8 @@ static int vaapi_hevc_start_frame(AVCodecContext          *avctx,
         .pps_beta_offset_div2                         = pps->beta_offset / 2,
         .pps_tc_offset_div2                           = pps->tc_offset / 2,
         .log2_parallel_merge_level_minus2             = pps->log2_parallel_merge_level - 2,
-        .bit_depth_luma_minus8                        = sps->bit_depth - 8,
-        .bit_depth_chroma_minus8                      = sps->bit_depth - 8,
+        .bit_depth_luma_minus8                        = sps->bit_depth_luma - 8,
+        .bit_depth_chroma_minus8                      = sps->bit_depth_luma - 8,
         .log2_max_pic_order_cnt_lsb_minus4            = sps->log2_max_poc_lsb - 4,
         .num_extra_slice_header_bits                  = pps->num_extra_slice_header_bits,
         .pic_fields.bits = {
@@ -408,7 +408,7 @@ static int vaapi_hevc_decode_slice(AVCodecContext *avctx,
 
     int err, i, list_idx;
 
-    if (!sh->first_mb_in_slice ) {
+    if (!sh->first_slice_segment_in_pic_flag) {
         err = ff_vaapi_decode_make_slice_buffer(avctx, &pic->pic,
                                                 &pic->last_slice_param, slice_param_size,
                                                 pic->last_buffer, pic->last_size);

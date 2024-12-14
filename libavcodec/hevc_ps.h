@@ -159,7 +159,7 @@ typedef struct HEVCSPS {
 
     HEVCWindow pic_conf_win;
 
-    int bit_depth;
+    int bit_depth_luma;
     int bit_depth_chroma;
     int pixel_shift;
     enum AVPixelFormat pix_fmt;
@@ -202,9 +202,9 @@ typedef struct HEVCSPS {
     uint8_t sps_temporal_mvp_enabled_flag;
     uint8_t sps_strong_intra_smoothing_enable_flag;
 
-    unsigned int log2_min_cb_size;
-    unsigned int log2_diff_max_min_coding_block_size;
-    unsigned int log2_min_tb_size;
+    unsigned int log2_min_luma_coding_block_size;
+    unsigned int log2_diff_max_min_luma_coding_block_size;
+    unsigned int log2_min_luma_transform_block_size;
     unsigned int log2_max_trafo_size;
     unsigned int CtbLog2SizeY;
     unsigned int log2_min_pu_size;

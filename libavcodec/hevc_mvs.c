@@ -74,10 +74,10 @@ static av_always_inline int z_scan_block_avail(HEVCContext *s, int xCurr, int yC
     if( yN_ctb < yCurr_ctb || xN_ctb < xCurr_ctb )
         return 1;
     else {
-        int Curr = MIN_TB_ADDR_ZS((xCurr >> s->ps.sps->log2_min_tb_size) & s->ps.sps->tb_mask,
-                (yCurr >> s->ps.sps->log2_min_tb_size) & s->ps.sps->tb_mask);
-        int N    = MIN_TB_ADDR_ZS((xN >> s->ps.sps->log2_min_tb_size) & s->ps.sps->tb_mask,
-                (yN >> s->ps.sps->log2_min_tb_size) & s->ps.sps->tb_mask);
+        int Curr = MIN_TB_ADDR_ZS((xCurr >> s->ps.sps->log2_min_luma_transform_block_size) & s->ps.sps->tb_mask,
+                (yCurr >> s->ps.sps->log2_min_luma_transform_block_size) & s->ps.sps->tb_mask);
+        int N    = MIN_TB_ADDR_ZS((xN >> s->ps.sps->log2_min_luma_transform_block_size) & s->ps.sps->tb_mask,
+                (yN >> s->ps.sps->log2_min_luma_transform_block_size) & s->ps.sps->tb_mask);
         return N <= Curr;
     }
 }

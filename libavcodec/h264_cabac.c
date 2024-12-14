@@ -1639,8 +1639,8 @@ decode_cabac_residual_internal(const H264Context *h, H264SliceContext *sl,
 #ifdef CABAC_ON_STACK
 #define CC &cc
     CABACContext cc;
-    cc.range     = sl->cabac.range;
-    cc.low       = sl->cabac.low;
+    cc.ivlCurrRange     = sl->cabac.ivlCurrRange;
+    cc.ivlOffset       = sl->cabac.ivlOffset;
     cc.bytestream= sl->cabac.bytestream;
 #if !UNCHECKED_BITSTREAM_READER || ARCH_AARCH64
     cc.bytestream_end = sl->cabac.bytestream_end;
@@ -1759,8 +1759,8 @@ decode_cabac_residual_internal(const H264Context *h, H264SliceContext *sl,
         STORE_BLOCK(int16_t)
     }
 #ifdef CABAC_ON_STACK
-            sl->cabac.range     = cc.range     ;
-            sl->cabac.low       = cc.low       ;
+            sl->cabac.ivlCurrRange     = cc.ivlCurrRange     ;
+            sl->cabac.ivlOffset       = cc.ivlOffset       ;
             sl->cabac.bytestream= cc.bytestream;
 #endif
 
@@ -2033,9 +2033,9 @@ decode_intra_mb:
         // FIXME The two following lines get the bitstream position in the cabac
         // decode, I think it should be done by a function in cabac.h (or cabac.c).
         ptr= sl->cabac.bytestream;
-        if(sl->cabac.low&0x1) ptr--;
+        if(sl->cabac.ivlOffset&0x1) ptr--;
         if(CABAC_BITS==16){
-            if(sl->cabac.low&0x1FF) ptr--;
+            if(sl->cabac.ivlOffset&0x1FF) ptr--;
         }
 
         // The pixels are stored in the same order as levels in h->mb array.
@@ -2044,7 +2044,7 @@ decode_intra_mb:
         sl->intra_pcm_ptr = ptr;
         ptr += mb_size;
 
-        ret = ff_init_cabac_decoder(&sl->cabac, ptr, sl->cabac.bytestream_end - ptr);
+        ret = initialization_decoding_engine(&sl->cabac, ptr, sl->cabac.bytestream_end - ptr);
         if (ret < 0)
             return ret;
 

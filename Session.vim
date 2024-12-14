@@ -13,12 +13,11 @@ if &shortmess =~ 'A'
 else
   set shortmess=aoO
 endif
-badd +1262 libavcodec/hevcdec.c
-badd +0 libavcodec/hevc_mvs.c
+badd +2551 libavcodec/hevcdec.c
 argglobal
 %argdel
 $argadd libavcodec/hevcdec.c
-edit libavcodec/hevc_mvs.c
+edit libavcodec/hevcdec.c
 let s:save_splitbelow = &splitbelow
 let s:save_splitright = &splitright
 set splitbelow splitright
@@ -38,9 +37,7 @@ set winminheight=0
 set winheight=1
 set winminwidth=0
 set winwidth=1
-exe 'vert 1resize ' . ((&columns * 30 + 95) / 191)
-exe 'vert 2resize ' . ((&columns * 119 + 95) / 191)
-exe 'vert 3resize ' . ((&columns * 40 + 95) / 191)
+wincmd =
 argglobal
 enew
 file NERD_tree_tab_1
@@ -55,7 +52,6 @@ setlocal fdn=20
 setlocal nofen
 wincmd w
 argglobal
-balt libavcodec/hevcdec.c
 setlocal fdm=manual
 setlocal fde=0
 setlocal fmr={{{,}}}
@@ -66,12 +62,12 @@ setlocal fdn=20
 setlocal fen
 silent! normal! zE
 let &fdl = &fdl
-let s:l = 67 - ((6 * winheight(0) + 16) / 32)
+let s:l = 2551 - ((8 * winheight(0) + 16) / 32)
 if s:l < 1 | let s:l = 1 | endif
 keepjumps exe s:l
 normal! zt
-keepjumps 67
-normal! 0
+keepjumps 2551
+normal! 05|
 wincmd w
 argglobal
 enew
@@ -86,9 +82,7 @@ setlocal fdn=20
 setlocal nofen
 wincmd w
 2wincmd w
-exe 'vert 1resize ' . ((&columns * 30 + 95) / 191)
-exe 'vert 2resize ' . ((&columns * 119 + 95) / 191)
-exe 'vert 3resize ' . ((&columns * 40 + 95) / 191)
+wincmd =
 tabnext 1
 if exists('s:wipebuf') && len(win_findbuf(s:wipebuf)) == 0 && getbufvar(s:wipebuf, '&buftype') isnot# 'terminal'
   silent exe 'bwipe ' . s:wipebuf
@@ -104,6 +98,7 @@ if filereadable(s:sx)
 endif
 let &g:so = s:so_save | let &g:siso = s:siso_save
 set hlsearch
+nohlsearch
 doautoall SessionLoadPost
 unlet SessionLoad
 " vim: set ft=vim :

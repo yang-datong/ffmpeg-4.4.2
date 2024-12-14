@@ -803,7 +803,7 @@ static int scaling_list_data(GetBitContext *gb, AVCodecContext *avctx,
 
 static int map_pixel_format(AVCodecContext *avctx, HEVCSPS *sps) {
   const AVPixFmtDescriptor *desc;
-  switch (sps->bit_depth) {
+  switch (sps->bit_depth_luma) {
   case 8:
     if (sps->chroma_format_idc == 0) sps->pix_fmt = AV_PIX_FMT_GRAY8;
     if (sps->chroma_format_idc == 1) sps->pix_fmt = AV_PIX_FMT_YUV420P;
@@ -833,7 +833,7 @@ static int map_pixel_format(AVCodecContext *avctx, HEVCSPS *sps) {
            "The following bit-depths are currently specified: 8, 9, 10 and 12 "
            "bits, "
            "chroma_format_idc is %d, depth is %d\n",
-           sps->chroma_format_idc, sps->bit_depth);
+           sps->chroma_format_idc, sps->bit_depth_luma);
     return AVERROR_INVALIDDATA;
   }
 
@@ -844,7 +844,7 @@ static int map_pixel_format(AVCodecContext *avctx, HEVCSPS *sps) {
   sps->hshift[2] = sps->hshift[1] = desc->log2_chroma_w;
   sps->vshift[2] = sps->vshift[1] = desc->log2_chroma_h;
 
-  sps->pixel_shift = sps->bit_depth > 8;
+  sps->pixel_shift = sps->bit_depth_luma > 8;
 
   return 0;
 }
@@ -923,13 +923,13 @@ int ff_hevc_parse_sps(HEVCSPS *sps, GetBitContext *gb, unsigned int *sps_id,
     sps->output_window = sps->pic_conf_win;
   }
 
-  sps->bit_depth = get_ue_golomb_long(gb) + 8;
+  sps->bit_depth_luma = get_ue_golomb_long(gb) + 8;
   bit_depth_chroma = get_ue_golomb_long(gb) + 8;
-  if (sps->chroma_format_idc && bit_depth_chroma != sps->bit_depth) {
+  if (sps->chroma_format_idc && bit_depth_chroma != sps->bit_depth_luma) {
     av_log(avctx, AV_LOG_ERROR,
            "Luma bit depth (%d) is different from chroma bit depth (%d), "
            "this is unsupported.\n",
-           sps->bit_depth, bit_depth_chroma);
+           sps->bit_depth_luma, bit_depth_chroma);
     return AVERROR_INVALIDDATA;
   }
   sps->bit_depth_chroma = bit_depth_chroma;
@@ -983,28 +983,30 @@ int ff_hevc_parse_sps(HEVCSPS *sps, GetBitContext *gb, unsigned int *sps_id,
     }
   }
 
-  sps->log2_min_cb_size = get_ue_golomb_long(gb) + 3;
-  sps->log2_diff_max_min_coding_block_size = get_ue_golomb_long(gb);
-  sps->log2_min_tb_size = get_ue_golomb_long(gb) + 2;
+  sps->log2_min_luma_coding_block_size = get_ue_golomb_long(gb) + 3;
+  sps->log2_diff_max_min_luma_coding_block_size = get_ue_golomb_long(gb);
+  sps->log2_min_luma_transform_block_size = get_ue_golomb_long(gb) + 2;
   log2_diff_max_min_transform_block_size = get_ue_golomb_long(gb);
-  sps->log2_max_trafo_size =
-      log2_diff_max_min_transform_block_size + sps->log2_min_tb_size;
+  sps->log2_max_trafo_size = log2_diff_max_min_transform_block_size +
+                             sps->log2_min_luma_transform_block_size;
 
-  if (sps->log2_min_cb_size < 3 || sps->log2_min_cb_size > 30) {
+  if (sps->log2_min_luma_coding_block_size < 3 ||
+      sps->log2_min_luma_coding_block_size > 30) {
     av_log(avctx, AV_LOG_ERROR, "Invalid value %d for log2_min_cb_size",
-           sps->log2_min_cb_size);
+           sps->log2_min_luma_coding_block_size);
     return AVERROR_INVALIDDATA;
   }
 
-  if (sps->log2_diff_max_min_coding_block_size > 30) {
+  if (sps->log2_diff_max_min_luma_coding_block_size > 30) {
     av_log(avctx, AV_LOG_ERROR,
            "Invalid value %d for log2_diff_max_min_coding_block_size",
-           sps->log2_diff_max_min_coding_block_size);
+           sps->log2_diff_max_min_luma_coding_block_size);
     return AVERROR_INVALIDDATA;
   }
 
-  if (sps->log2_min_tb_size >= sps->log2_min_cb_size ||
-      sps->log2_min_tb_size < 2) {
+  if (sps->log2_min_luma_transform_block_size >=
+          sps->log2_min_luma_coding_block_size ||
+      sps->log2_min_luma_transform_block_size < 2) {
     av_log(avctx, AV_LOG_ERROR, "Invalid value for log2_min_tb_size");
     return AVERROR_INVALIDDATA;
   }
@@ -1040,10 +1042,12 @@ int ff_hevc_parse_sps(HEVCSPS *sps, GetBitContext *gb, unsigned int *sps_id,
     sps->pcm.log2_min_pcm_cb_size = get_ue_golomb_long(gb) + 3;
     sps->pcm.log2_max_pcm_cb_size =
         sps->pcm.log2_min_pcm_cb_size + get_ue_golomb_long(gb);
-    if (FFMAX(sps->pcm.bit_depth, sps->pcm.bit_depth_chroma) > sps->bit_depth) {
+    if (FFMAX(sps->pcm.bit_depth, sps->pcm.bit_depth_chroma) >
+        sps->bit_depth_luma) {
       av_log(avctx, AV_LOG_ERROR,
              "PCM bit depth (%d, %d) is greater than normal bit depth (%d)\n",
-             sps->pcm.bit_depth, sps->pcm.bit_depth_chroma, sps->bit_depth);
+             sps->pcm.bit_depth, sps->pcm.bit_depth_chroma,
+             sps->bit_depth_luma);
       return AVERROR_INVALIDDATA;
     }
 
@@ -1135,9 +1139,9 @@ int ff_hevc_parse_sps(HEVCSPS *sps, GetBitContext *gb, unsigned int *sps_id,
   }
 
   // Inferred parameters
-  sps->CtbLog2SizeY =
-      sps->log2_min_cb_size + sps->log2_diff_max_min_coding_block_size;
-  sps->log2_min_pu_size = sps->log2_min_cb_size - 1;
+  sps->CtbLog2SizeY = sps->log2_min_luma_coding_block_size +
+                      sps->log2_diff_max_min_luma_coding_block_size;
+  sps->log2_min_pu_size = sps->log2_min_luma_coding_block_size - 1;
 
   if (sps->CtbLog2SizeY > HEVC_MAX_LOG2_CTB_SIZE) {
     av_log(avctx, AV_LOG_ERROR, "CTB size out of range: 2^%d\n",
@@ -1158,31 +1162,32 @@ int ff_hevc_parse_sps(HEVCSPS *sps, GetBitContext *gb, unsigned int *sps_id,
       (sps->height + (1 << sps->CtbLog2SizeY) - 1) >> sps->CtbLog2SizeY;
   sps->ctb_size = sps->ctb_width * sps->ctb_height;
 
-  sps->min_cb_width = sps->width >> sps->log2_min_cb_size;
-  sps->min_cb_height = sps->height >> sps->log2_min_cb_size;
-  sps->min_tb_width = sps->width >> sps->log2_min_tb_size;
-  sps->min_tb_height = sps->height >> sps->log2_min_tb_size;
+  sps->min_cb_width = sps->width >> sps->log2_min_luma_coding_block_size;
+  sps->min_cb_height = sps->height >> sps->log2_min_luma_coding_block_size;
+  sps->min_tb_width = sps->width >> sps->log2_min_luma_transform_block_size;
+  sps->min_tb_height = sps->height >> sps->log2_min_luma_transform_block_size;
   sps->min_pu_width = sps->width >> sps->log2_min_pu_size;
   sps->min_pu_height = sps->height >> sps->log2_min_pu_size;
-  sps->tb_mask = (1 << (sps->CtbLog2SizeY - sps->log2_min_tb_size)) - 1;
+  sps->tb_mask =
+      (1 << (sps->CtbLog2SizeY - sps->log2_min_luma_transform_block_size)) - 1;
 
-  sps->qp_bd_offset = 6 * (sps->bit_depth - 8);
+  sps->qp_bd_offset = 6 * (sps->bit_depth_luma - 8);
 
-  if (av_mod_uintp2(sps->width, sps->log2_min_cb_size) ||
-      av_mod_uintp2(sps->height, sps->log2_min_cb_size)) {
+  if (av_mod_uintp2(sps->width, sps->log2_min_luma_coding_block_size) ||
+      av_mod_uintp2(sps->height, sps->log2_min_luma_coding_block_size)) {
     av_log(avctx, AV_LOG_ERROR, "Invalid coded frame dimensions.\n");
     return AVERROR_INVALIDDATA;
   }
 
   if (sps->max_transform_hierarchy_depth_inter >
-      sps->CtbLog2SizeY - sps->log2_min_tb_size) {
+      sps->CtbLog2SizeY - sps->log2_min_luma_transform_block_size) {
     av_log(avctx, AV_LOG_ERROR,
            "max_transform_hierarchy_depth_inter out of range: %d\n",
            sps->max_transform_hierarchy_depth_inter);
     return AVERROR_INVALIDDATA;
   }
   if (sps->max_transform_hierarchy_depth_intra >
-      sps->CtbLog2SizeY - sps->log2_min_tb_size) {
+      sps->CtbLog2SizeY - sps->log2_min_luma_transform_block_size) {
     av_log(avctx, AV_LOG_ERROR,
            "max_transform_hierarchy_depth_intra out of range: %d\n",
            sps->max_transform_hierarchy_depth_intra);
@@ -1310,7 +1315,7 @@ static int pps_range_extensions(GetBitContext *gb, AVCodecContext *avctx,
   pps->log2_sao_offset_scale_luma = get_ue_golomb_long(gb);
   pps->log2_sao_offset_scale_chroma = get_ue_golomb_long(gb);
 
-  if (pps->log2_sao_offset_scale_luma > FFMAX(sps->bit_depth - 10, 0) ||
+  if (pps->log2_sao_offset_scale_luma > FFMAX(sps->bit_depth_luma - 10, 0) ||
       pps->log2_sao_offset_scale_chroma > FFMAX(sps->bit_depth_chroma - 10, 0))
     return AVERROR_INVALIDDATA;
 
@@ -1324,8 +1329,7 @@ static inline int setup_pps(AVCodecContext *avctx, GetBitContext *gb,
   int i, j, x, y, ctb_addr_rs, tile_id;
 
   // Inferred parameters
-  pps->colBd =
-      av_malloc_array(pps->num_tile_columns + 1, sizeof(*pps->colBd));
+  pps->colBd = av_malloc_array(pps->num_tile_columns + 1, sizeof(*pps->colBd));
   pps->rowBd = av_malloc_array(pps->num_tile_rows + 1, sizeof(*pps->rowBd));
   pps->col_idxX = av_malloc_array(sps->ctb_width, sizeof(*pps->col_idxX));
   if (!pps->colBd || !pps->rowBd || !pps->col_idxX) return AVERROR(ENOMEM);
@@ -1340,14 +1344,13 @@ static inline int setup_pps(AVCodecContext *avctx, GetBitContext *gb,
     if (!pps->colWidth || !pps->rowHeight) return AVERROR(ENOMEM);
 
     for (i = 0; i < pps->num_tile_columns; i++) {
-      pps->colWidth[i] =
-          ((i + 1) * sps->ctb_width) / pps->num_tile_columns -
-          (i * sps->ctb_width) / pps->num_tile_columns;
+      pps->colWidth[i] = ((i + 1) * sps->ctb_width) / pps->num_tile_columns -
+                         (i * sps->ctb_width) / pps->num_tile_columns;
     }
 
     for (i = 0; i < pps->num_tile_rows; i++) {
       pps->rowHeight[i] = ((i + 1) * sps->ctb_height) / pps->num_tile_rows -
-                           (i * sps->ctb_height) / pps->num_tile_rows;
+                          (i * sps->ctb_height) / pps->num_tile_rows;
     }
   }
 
@@ -1419,8 +1422,7 @@ static inline int setup_pps(AVCodecContext *avctx, GetBitContext *gb,
     for (i = 0; i < pps->num_tile_columns; i++, tile_id++)
       for (y = pps->rowBd[j]; y < pps->rowBd[j + 1]; y++)
         for (x = pps->colBd[i]; x < pps->colBd[i + 1]; x++)
-          pps->TileId[pps->CtbAddrRsToTs[y * sps->ctb_width + x]] =
-              tile_id;
+          pps->TileId[pps->CtbAddrRsToTs[y * sps->ctb_width + x]] = tile_id;
 
   pps->tile_pos_rs = av_malloc_array(tile_id, sizeof(*pps->tile_pos_rs));
   if (!pps->tile_pos_rs) return AVERROR(ENOMEM);
@@ -1430,7 +1432,7 @@ static inline int setup_pps(AVCodecContext *avctx, GetBitContext *gb,
       pps->tile_pos_rs[j * pps->num_tile_columns + i] =
           pps->rowBd[j] * sps->ctb_width + pps->colBd[i];
 
-  log2_diff = sps->CtbLog2SizeY - sps->log2_min_tb_size;
+  log2_diff = sps->CtbLog2SizeY - sps->log2_min_luma_transform_block_size;
   pps->min_tb_addr_zs = &pps->min_tb_addr_zs_tab[1 * (sps->tb_mask + 2) + 1];
   for (y = 0; y < sps->tb_mask + 2; y++) {
     pps->min_tb_addr_zs_tab[y * (sps->tb_mask + 2)] = -1;
@@ -1539,7 +1541,7 @@ int ff_hevc_decode_nal_pps(GetBitContext *gb, AVCodecContext *avctx,
     pps->diff_cu_qp_delta_depth = get_ue_golomb_long(gb);
 
   if (pps->diff_cu_qp_delta_depth < 0 ||
-      pps->diff_cu_qp_delta_depth > sps->log2_diff_max_min_coding_block_size) {
+      pps->diff_cu_qp_delta_depth > sps->log2_diff_max_min_luma_coding_block_size) {
     av_log(avctx, AV_LOG_ERROR, "diff_cu_qp_delta_depth %d is invalid\n",
            pps->diff_cu_qp_delta_depth);
     ret = AVERROR_INVALIDDATA;

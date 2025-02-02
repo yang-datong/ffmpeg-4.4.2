@@ -4986,7 +4986,7 @@ int main(int argc, char **argv) {
 #endif
   avformat_network_init();
 
-  show_banner(argc, argv, options);
+  /*show_banner(argc, argv, options);*/
 
   /* parse options and open all input/output files */
   ret = ffmpeg_parse_options(argc, argv);

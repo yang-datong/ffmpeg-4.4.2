@@ -1523,7 +1523,7 @@ int ff_hevc_decode_nal_pps(GetBitContext *gb, AVCodecContext *avctx,
   pps->output_flag_present_flag = get_bits1(gb);
   pps->num_extra_slice_header_bits = get_bits(gb, 3);
 
-  pps->sign_data_hiding_flag = get_bits1(gb);
+  pps->sign_data_hiding_enabled_flag = get_bits1(gb);
 
   pps->cabac_init_present_flag = get_bits1(gb);
 
@@ -1567,7 +1567,7 @@ int ff_hevc_decode_nal_pps(GetBitContext *gb, AVCodecContext *avctx,
   pps->weighted_pred_flag = get_bits1(gb);
   pps->weighted_bipred_flag = get_bits1(gb);
 
-  pps->transquant_bypass_enable_flag = get_bits1(gb);
+  pps->transquant_bypass_enabled_flag = get_bits1(gb);
   pps->tiles_enabled_flag = get_bits1(gb);
   pps->entropy_coding_sync_enabled_flag = get_bits1(gb);
 

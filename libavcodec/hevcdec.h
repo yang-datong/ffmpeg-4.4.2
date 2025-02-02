@@ -298,7 +298,7 @@ typedef struct SliceHeader {
     int beta_offset;    ///< beta_offset_div2 * 2
     int tc_offset;      ///< tc_offset_div2 * 2
 
-    unsigned int max_num_merge_cand; ///< 5 - 5_minus_max_num_merge_cand
+    unsigned int MaxNumMergeCand; ///< 5 - 5_minus_max_num_merge_cand
 
     unsigned *entry_point_offset;
     int * offset;
@@ -328,11 +328,11 @@ typedef struct CodingUnit {
     int x;
     int y;
 
-    enum PredMode pred_mode;    ///< PredMode
+    enum PredMode CuPredMode;    ///< PredMode
     enum PartMode part_mode;    ///< PartMode
 
     // Inferred parameters
-    uint8_t intra_split_flag;   ///< IntraSplitFlag
+    uint8_t IntraSplitFlag;   ///< IntraSplitFlag
     uint8_t max_trafo_depth;    ///< MaxTrafoDepth
     uint8_t cu_transquant_bypass_flag;
 } CodingUnit;
@@ -364,7 +364,7 @@ typedef struct PredictionUnit {
     Mv mvd;
     uint8_t merge_flag;
     uint8_t intra_pred_mode_c[4];
-    uint8_t chroma_mode_c[4];
+    uint8_t intra_chroma_pred_mode[4];
 } PredictionUnit;
 
 typedef struct TransformUnit {
@@ -605,7 +605,7 @@ int ff_hevc_sao_offset_sign_decode(HEVCContext *s);
 int ff_hevc_sao_eo_class_decode(HEVCContext *s);
 int ff_hevc_end_of_slice_flag_decode(HEVCContext *s);
 int ff_hevc_cu_transquant_bypass_flag_decode(HEVCContext *s);
-int ff_hevc_skip_flag_decode(HEVCContext *s, int x0, int y0,
+int decode_cu_skip_flag(HEVCContext *s, int x0, int y0,
                              int x_cb, int y_cb);
 int ff_hevc_pred_mode_decode(HEVCContext *s);
 int ff_hevc_split_coding_unit_flag_decode(HEVCContext *s, int ct_depth,
@@ -685,7 +685,7 @@ void ff_hevc_hls_residual_coding(HEVCContext *s, int x0, int y0,
                                  int log2_trafo_size, enum ScanType scan_idx,
                                  int c_idx);
 
-void ff_hevc_hls_mvd_coding(HEVCContext *s, int x0, int y0, int log2_cb_size);
+void mvd_coding(HEVCContext *s, int x0, int y0, int log2_cb_size);
 
 extern const uint8_t ff_hevc_qpel_extra_before[4];
 extern const uint8_t ff_hevc_qpel_extra_after[4];

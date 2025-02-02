@@ -249,7 +249,7 @@ typedef struct HEVCSPS {
 typedef struct HEVCPPS {
     unsigned int sps_id; ///< seq_parameter_set_id
 
-    uint8_t sign_data_hiding_flag;
+    uint8_t sign_data_hiding_enabled_flag;
 
     uint8_t cabac_init_present_flag;
 
@@ -269,7 +269,7 @@ typedef struct HEVCPPS {
     uint8_t weighted_pred_flag;
     uint8_t weighted_bipred_flag;
     uint8_t output_flag_present_flag;
-    uint8_t transquant_bypass_enable_flag;
+    uint8_t transquant_bypass_enabled_flag;
 
     uint8_t dependent_slice_segments_enabled_flag;
     uint8_t tiles_enabled_flag;

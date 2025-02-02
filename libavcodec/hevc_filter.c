@@ -213,7 +213,7 @@ static void restore_tqb_pixels(HEVCContext *s,
                                ptrdiff_t stride_src, ptrdiff_t stride_dst,
                                int x0, int y0, int width, int height, int c_idx)
 {
-    if ( s->ps.pps->transquant_bypass_enable_flag ||
+    if ( s->ps.pps->transquant_bypass_enabled_flag ||
             (s->ps.sps->pcm.loop_filter_disable_flag && s->ps.sps->pcm_enabled_flag)) {
         int x, y;
         int min_pu_size  = 1 << s->ps.sps->log2_min_pu_size;
@@ -320,7 +320,7 @@ static void sao_filter_CTB(HEVCContext *s, int x, int y)
         case SAO_BAND:
             copy_CTB_to_hv(s, src, stride_src, x0, y0, width, height, c_idx,
                            x_ctb, y_ctb);
-            if (s->ps.pps->transquant_bypass_enable_flag ||
+            if (s->ps.pps->transquant_bypass_enabled_flag ||
                 (s->ps.sps->pcm.loop_filter_disable_flag && s->ps.sps->pcm_enabled_flag)) {
             dst = lc->edge_emu_buffer;
             stride_dst = 2*MAX_PB_SIZE;
@@ -493,7 +493,7 @@ static void deblocking_filter_CTB(HEVCContext *s, int x0, int y0)
     int tc_offset, beta_offset;
     int pcmf = (s->ps.sps->pcm_enabled_flag &&
                 s->ps.sps->pcm.loop_filter_disable_flag) ||
-               s->ps.pps->transquant_bypass_enable_flag;
+               s->ps.pps->transquant_bypass_enabled_flag;
 
     if (x0) {
         left_tc_offset   = s->deblock[ctb - 1].tc_offset;

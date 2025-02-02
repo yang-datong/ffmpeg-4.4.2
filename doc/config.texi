@@ -219,7 +219,7 @@
 @set have-termios-h yes
 @c @set have-udplite-h no
 @set have-unistd-h yes
-@c @set have-valgrind-valgrind-h no
+@set have-valgrind-valgrind-h yes
 @c @set have-windows-h no
 @c @set have-winsock2-h no
 @c @set have-intrinsics-neon no
@@ -524,7 +524,7 @@
 @c @set config-audiotoolbox no
 @c @set config-crystalhd no
 @c @set config-cuda no
-@c @set config-cuda-llvm no
+@set config-cuda-llvm yes
 @c @set config-cuvid no
 @c @set config-d3d11va no
 @c @set config-dxva2 no
@@ -543,7 +543,7 @@
 @set config-runtime-cpudetect yes
 @set config-safe-bitstream-reader yes
 @set config-shared yes
-@set config-small yes
+@c @set config-small no
 @c @set config-static no
 @set config-swscale-alpha yes
 @set config-gpl yes
@@ -582,7 +582,7 @@
 @c @set config-ossfuzz no
 @set config-pic yes
 @c @set config-thumb no
-@c @set config-valgrind-backtrace no
+@set config-valgrind-backtrace yes
 @c @set config-xmm-clobber-test no
 @set config-bsfs yes
 @set config-decoders yes

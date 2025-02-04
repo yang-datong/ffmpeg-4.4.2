@@ -178,7 +178,7 @@ typedef struct HEVCSPS {
     VUI vui;
     PTL ptl;
 
-    uint8_t scaling_list_enable_flag;
+    uint8_t scaling_list_enabled_flag;
     ScalingList scaling_list;
 
     unsigned int nb_st_rps;

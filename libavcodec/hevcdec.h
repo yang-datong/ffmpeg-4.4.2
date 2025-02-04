@@ -425,7 +425,7 @@ typedef struct HEVCFrame {
 typedef struct HEVCLocalContext {
     uint8_t preCtxState[HEVC_CONTEXTS];
 
-    uint8_t stat_coeff[HEVC_STAT_COEFFS];
+    uint8_t StatCoeff[HEVC_STAT_COEFFS];
 
     uint8_t first_qp_group;
 

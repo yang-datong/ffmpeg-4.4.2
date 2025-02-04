@@ -1022,8 +1022,8 @@ int ff_hevc_parse_sps(HEVCSPS *sps, GetBitContext *gb, unsigned int *sps_id,
   sps->max_transform_hierarchy_depth_inter = get_ue_golomb_long(gb);
   sps->max_transform_hierarchy_depth_intra = get_ue_golomb_long(gb);
 
-  sps->scaling_list_enable_flag = get_bits1(gb);
-  if (sps->scaling_list_enable_flag) {
+  sps->scaling_list_enabled_flag = get_bits1(gb);
+  if (sps->scaling_list_enabled_flag) {
     set_default_scaling_list_data(&sps->scaling_list);
 
     if (get_bits1(gb)) {

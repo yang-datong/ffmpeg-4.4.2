@@ -1,3 +1,4 @@
+// run ./test.sh
 /*
  * H.26L/H.264/AVC/JVT/14496-10/... encoder/decoder
  * Copyright (c) 2003 Michael Niedermayer <michaelni@gmx.at>
@@ -118,16 +119,12 @@ static int get_cabac_inline(CABACContext *c, uint8_t *const state) {
   int codIRangeLPS = rangeTabLPS[2 * (c->ivlCurrRange & 0xC0) + pStateIdx];
   int bit, lps_mask;
 
-  static int yangjing = 0;
-  yangjing++;
-  printf("yangjing:%d\n", yangjing);
-  if (yangjing == 20) {
-    int a;
-  }
-
   c->ivlCurrRange -= codIRangeLPS;
   lps_mask = ((c->ivlCurrRange << (CABAC_BITS + 1)) - c->ivlOffset) >> 31;
 
+  if(24342528 == c->ivlOffset){
+    int a = 0;
+  }
   //printf("ivlOffset:%d\n", c->ivlOffset );
   c->ivlOffset -= (c->ivlCurrRange << (CABAC_BITS + 1)) & lps_mask;
   c->ivlCurrRange += (codIRangeLPS - c->ivlCurrRange) & lps_mask;
@@ -161,6 +158,7 @@ static int av_unused get_cabac(CABACContext *c, uint8_t *const state) {
 
 #ifndef get_cabac_bypass
 static int av_unused get_cabac_bypass(CABACContext *c) {
+  //printf("ivlOffset:%d\n", c->ivlOffset);
   int range;
   c->ivlOffset += c->ivlOffset;
 

@@ -2128,9 +2128,12 @@ static void intra_prediction_unit(HEVCContext *s, int x0, int y0,
       if (prev_intra_luma_pred_flag[2 * i + j]) {
         lc->pu.mpm_idx = ff_hevc_mpm_idx_decode(s);
         printf("mpm_idx:%d\n", lc->pu.mpm_idx);
-      } else
+      } else {
         lc->pu.rem_intra_luma_pred_mode =
             ff_hevc_rem_intra_luma_pred_mode_decode(s);
+        printf("rem_intra_luma_pred_mode:%d\n",
+               lc->pu.rem_intra_luma_pred_mode);
+      }
 
       lc->pu.intra_pred_mode[2 * i + j] =
           luma_intra_pred_mode(s, x0 + pb_size * j, y0 + pb_size * i, pb_size,
@@ -2231,9 +2234,6 @@ static int hls_coding_unit(HEVCContext *s, int x0, int y0, int log2CbSize) {
 
   static int yangjing = 0;
   yangjing++;
-  if (yangjing == 2) {
-    printf("%s\n", "hi~");
-  }
 
   if (s->ps.pps->transquant_bypass_enabled_flag) {
     lc->cu.cu_transquant_bypass_flag =
@@ -2262,6 +2262,8 @@ static int hls_coding_unit(HEVCContext *s, int x0, int y0, int log2CbSize) {
   }
 
   if (SAMPLE_CTB(s->skip_flag, x_cb, y_cb)) {
+    printf("%s\n", "hi~");
+    exit(0);
     hls_prediction_unit(s, x0, y0, cb_size, cb_size, log2CbSize, 0, idx);
     intra_prediction_unit_default_value(s, x0, y0, log2CbSize);
 
@@ -2274,13 +2276,16 @@ static int hls_coding_unit(HEVCContext *s, int x0, int y0, int log2CbSize) {
       lc->cu.CuPredMode = ff_hevc_pred_mode_decode(s);
     if (lc->cu.CuPredMode != MODE_INTRA ||
         log2CbSize == s->ps.sps->log2_min_luma_coding_block_size) {
+      if (yangjing == 2) {
+        int a = 0;
+      }
       lc->cu.part_mode = ff_hevc_part_mode_decode(s, log2CbSize);
       printf("part_mode:%d\n", lc->cu.part_mode);
       lc->cu.IntraSplitFlag =
           lc->cu.part_mode == PART_NxN && lc->cu.CuPredMode == MODE_INTRA;
-      if (yangjing == 2) {
-        exit(0);
-      }
+      /*if (yangjing == 2) {*/
+      /*exit(0);*/
+      /*}*/
     }
 
     if (lc->cu.CuPredMode == MODE_INTRA) {

@@ -117,11 +117,12 @@ int initialization_decoding_engine(CABACContext *c, const uint8_t *buf,
   c->ivlOffset = (*c->bytestream++) << 18;
   c->ivlOffset += (*c->bytestream++) << 10;
   // 将我们的 fetch 保持在 2 字节边界上，因为如果编译器（或 asm）将双字节加载优化为单个指令，这应该可以避免执行未对齐的加载
-  if (((uintptr_t)c->bytestream & 1) == 0) {
+  // NOTE:为了统一，这里先关闭对齐功能，依旧可以正常解码
+  /*if (((uintptr_t)c->bytestream & 1) == 0) {*/
     c->ivlOffset += (1 << 9);
-  } else {
-    c->ivlOffset += ((*c->bytestream++) << 2) + 2;
-  }
+  /*} else {*/
+    /*c->ivlOffset += ((*c->bytestream++) << 2) + 2;*/
+  /*}*/
   c->ivlCurrRange = 0x1FE;
   if ((c->ivlCurrRange << (CABAC_BITS + 1)) < c->ivlOffset)
     return AVERROR_INVALIDDATA;

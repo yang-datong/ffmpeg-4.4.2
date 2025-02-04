@@ -164,7 +164,7 @@ static int vaapi_hevc_start_frame(AVCodecContext          *avctx,
             .tiles_enabled_flag                         = pps->tiles_enabled_flag,
             .separate_colour_plane_flag                 = sps->separate_colour_plane_flag,
             .pcm_enabled_flag                           = sps->pcm_enabled_flag,
-            .scaling_list_enabled_flag                  = sps->scaling_list_enable_flag,
+            .scaling_list_enabled_flag                  = sps->scaling_list_enabled_flag,
             .transform_skip_enabled_flag                = pps->transform_skip_enabled_flag,
             .amp_enabled_flag                           = sps->amp_enabled_flag,
             .strong_intra_smoothing_enabled_flag        = sps->sps_strong_intra_smoothing_enable_flag,
@@ -257,7 +257,7 @@ static int vaapi_hevc_start_frame(AVCodecContext          *avctx,
 
     if (pps->scaling_list_data_present_flag)
         scaling_list = &pps->scaling_list;
-    else if (sps->scaling_list_enable_flag)
+    else if (sps->scaling_list_enabled_flag)
         scaling_list = &sps->scaling_list;
 
     if (scaling_list) {

@@ -1577,6 +1577,11 @@ static int coeff_sign_flag_decode(HEVCContext *s, uint8_t nb) {
 void ff_hevc_hls_residual_coding(HEVCContext *s, int x0, int y0,
                                  int log2TrafoSize, enum ScanType scanIdx,
                                  int cIdx) {
+  static int yangjing = 0;
+  yangjing++;
+  if (yangjing > 1) {
+    printf("yangjing = %d\n", yangjing);
+  }
 #define GET_COORD(offset, n)                                                   \
   do {                                                                         \
     xC = (xS << 2) + scan_x_off[n];                                            \
@@ -1709,6 +1714,8 @@ void ff_hevc_hls_residual_coding(HEVCContext *s, int x0, int y0,
     }
   }
 
+  printf("call last_significant_coeff_xy_prefix_decode(%d,%d,,)\n", cIdx,
+         log2TrafoSize);
   last_significant_coeff_xy_prefix_decode(s, cIdx, log2TrafoSize,
                                           &last_significant_coeff_x,
                                           &last_significant_coeff_y);
@@ -1731,7 +1738,11 @@ void ff_hevc_hls_residual_coding(HEVCContext *s, int x0, int y0,
 
   printf("LastSignificantCoeffX:%d\n", last_significant_coeff_x);
   printf("LastSignificantCoeffY:%d\n", last_significant_coeff_y);
+  if (last_significant_coeff_x == 5 && last_significant_coeff_y == 0) {
+    int a = 0;
+  }
 
+  printf("scanIdx:%d\n", scanIdx);
   if (scanIdx == SCAN_VERT)
     FFSWAP(int, last_significant_coeff_x, last_significant_coeff_y);
 
@@ -1809,8 +1820,8 @@ void ff_hevc_hls_residual_coding(HEVCContext *s, int x0, int y0,
       significant_coeff_group_flag[xS][yS] =
           significant_coeff_group_flag_decode(s, cIdx, ctx_cg);
       inferSbDcSigCoeffFlag = 1;
-      printf("%s\n","hi~");
-      exit(0);
+      /*printf("%s\n", "hi~");*/
+      /*exit(0);*/
     } else {
       significant_coeff_group_flag[xS][yS] =
           ((xS == x_cg_last_sig && yS == y_cg_last_sig) ||
@@ -1818,6 +1829,10 @@ void ff_hevc_hls_residual_coding(HEVCContext *s, int x0, int y0,
     }
 
     lastScanPos = num_coeff - offset - 1;
+    printf(
+        "lastScanPos:%d,LastSignificantCoeffX:%d,LastSignificantCoeffY:%d,xC:%"
+        "d,yC:%d\n",
+        lastScanPos, last_significant_coeff_x, last_significant_coeff_y, 0, 0);
 
     if (i == lastSubBlock) {
       n_end = lastScanPos - 1;
@@ -1826,6 +1841,8 @@ void ff_hevc_hls_residual_coding(HEVCContext *s, int x0, int y0,
     } else {
       n_end = 15;
     }
+
+    printf("n_end:%d\n", lastScanPos - 1);
 
     if (xS < ((1 << log2TrafoSize) - 1) >> 2)
       prev_sig = !!significant_coeff_group_flag[xS + 1][yS];
@@ -1892,7 +1909,7 @@ void ff_hevc_hls_residual_coding(HEVCContext *s, int x0, int y0,
           inferSbDcSigCoeffFlag = 0;
         }
         printf("sig_coeff_flag:%d,xC:%d,yC:%d\n", t, xC, yC);
-        printf("yangjing:%d\n", ++yangjing);
+        /*printf("yangjing:%d\n", ++yangjing);*/
         if (yangjing == 3) {
           int a = 0;
         }
@@ -1999,7 +2016,7 @@ void ff_hevc_hls_residual_coding(HEVCContext *s, int x0, int y0,
         n = significant_coeff_flag_idx[m];
         GET_COORD(offset, n);
         /*printf("xC:%d,yC:%d,xS:%d,yS:%d,scan_x_off:%d,scan_y_off:%d,n:%d\n", xC, yC,*/
-               /*xS, yS, scan_x_off[n], scan_y_off[n],n);*/
+        /*xS, yS, scan_x_off[n], scan_y_off[n],n);*/
         if (m < 8) {
           /*printf("baseLevel:%d,index:%d,lastGreater1ScanPos:%d\n",*/
           /*1 + coeff_abs_level_greater1_flag[m], m,*/

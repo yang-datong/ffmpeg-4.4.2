@@ -271,7 +271,7 @@ CFDataRef ff_videotoolbox_hvcc_extradata_create(AVCodecContext *avctx)
      * bit(5) reserved = ‘11111’b;
      * unsigned int(3) bitDepthLumaMinus8;
      */
-    AV_W8(p + 17, (sps->bit_depth - 8) | 0xfc);
+    AV_W8(p + 17, (sps->bit_depth_luma - 8) | 0xfc);
 
     /*
      * bit(5) reserved = ‘11111’b;
